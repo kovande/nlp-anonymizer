@@ -4,16 +4,44 @@ import pandas as pd
 from src.anonymizer import anonymize_spacy, anonymize_transformer
 
 def simple_evaluation(predictions, references):
-    """Exact string match accuracy"""
+    """
+    Exact string match accuracy.
+
+    Note:
+    This is very strict and often misleading for NLP tasks,
+    since small formatting differences count as errors.
+    """
     correct = sum(p == r for p, r in zip(predictions, references))
     accuracy = correct / len(predictions)
     return accuracy
 
 def extract_tags(text):
+    """Extract anonymization tags like <PERSON>, <ORG> from text."""
     return set([word for word in text.split() if word.startswith("<")])
 
 def entity_level_score(pred, ref):
-    """F1 score on tag level"""
+    """
+    Compute an F1-like score based on detected tags.
+
+    The function compares only the presence of tags (e.g. <PERSON>, <ORG>)
+    and ignores their position or frequency in the text.
+
+    Example:
+        ref  = "<PERSON> works at <ORG> in <LOCATION>"
+        pred = "<PERSON> works at <ORG>"
+
+        pred_tags = {"<PERSON>", "<ORG>"}
+        ref_tags  = {"<PERSON>", "<ORG>", "<LOCATION>"}
+
+        precision = 2/2 = 1.0   (all predicted tags are correct)
+        recall    = 2/3 ≈ 0.67  (missed <LOCATION>)
+        F1        ≈ 0.80
+
+    Note:
+        - Does NOT consider positions of entities
+        - Does NOT account for multiple occurrences of the same tag
+        - Useful for quick evaluation, but not a full NER metric
+    """
     pred_tags = extract_tags(pred)
     ref_tags = extract_tags(ref)
 
@@ -29,6 +57,7 @@ def entity_level_score(pred, ref):
     return 2 * (precision * recall) / (precision + recall)
 
 def evaluate(model_fn, data):
+    """Run a model on dataset and compute metrics."""
     preds = [model_fn(text) for text in data["text"]]
 
     acc = simple_evaluation(preds, data["label"])

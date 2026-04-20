@@ -8,6 +8,11 @@ _transformer_pipeline = None
 
 
 def get_spacy():
+    """
+    Lazy-load spaCy model.
+    This prevents expensive reloads when the function is called multiple times
+    (important for APIs / Streamlit apps).
+    """
     global _spacy_model
     if _spacy_model is None:
         _spacy_model = spacy.load("en_core_web_sm")
@@ -15,6 +20,9 @@ def get_spacy():
 
 
 def get_transformer():
+    """
+    Lazy-load HuggingFace NER pipeline.
+    """
     global _transformer_pipeline
     if _transformer_pipeline is None:
         _transformer_pipeline = pipeline(
