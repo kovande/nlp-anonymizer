@@ -7,6 +7,7 @@ This project extracts and anonymizes sensitive information using pre-trained NER
 pip install -r requirements.txt
 
 ## Usage
+Run Commands
 ```bash
 python -m src.benchmark
 streamlit run app.py
